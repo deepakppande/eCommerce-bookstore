@@ -1,0 +1,722 @@
+openapi: 3.0.3
+info:
+  title: E-Bookstore API
+  version: 1.0.0
+  description: REST API for the E-Bookstore e-commerce platform
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development
+
+tags:
+  - name: Auth
+  - name: Users
+  - name: Addresses
+  - name: Categories
+  - name: Brands
+  - name: Books
+  - name: Cart
+  - name: Orders
+  - name: Payments
+
+paths:
+
+  # ── AUTH ──────────────────────────────────────────────────────────────────
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Log in and receive a JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Invalidate current session
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Logged out
+
+  # ── USERS ─────────────────────────────────────────────────────────────────
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Get current user profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    patch:
+      tags: [Users]
+      summary: Update current user profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  # ── ADDRESSES ─────────────────────────────────────────────────────────────
+  /users/me/addresses:
+    get:
+      tags: [Addresses]
+      summary: List delivery addresses
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Address list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Address'
+    post:
+      tags: [Addresses]
+      summary: Add a delivery address
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddressRequest'
+      responses:
+        '201':
+          description: Address created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+
+  /users/me/addresses/{addressId}:
+    patch:
+      tags: [Addresses]
+      summary: Update an address
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/addressId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddressRequest'
+      responses:
+        '200':
+          description: Updated address
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+    delete:
+      tags: [Addresses]
+      summary: Delete an address
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/addressId'
+      responses:
+        '204':
+          description: Deleted
+
+  # ── CATEGORIES ────────────────────────────────────────────────────────────
+  /categories:
+    get:
+      tags: [Categories]
+      summary: List all categories
+      responses:
+        '200':
+          description: Categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+
+  # ── BRANDS ────────────────────────────────────────────────────────────────
+  /brands:
+    get:
+      tags: [Brands]
+      summary: List all brands/publishers
+      responses:
+        '200':
+          description: Brands
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Brand'
+
+  # ── BOOKS ─────────────────────────────────────────────────────────────────
+  /books:
+    get:
+      tags: [Books]
+      summary: List / search books
+      parameters:
+        - name: categoryId
+          in: query
+          schema: { type: string, format: uuid }
+        - name: brandId
+          in: query
+          schema: { type: string, format: uuid }
+        - name: q
+          in: query
+          schema: { type: string }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+      responses:
+        '200':
+          description: Paginated book list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookPage'
+
+  /books/recommended:
+    get:
+      tags: [Books]
+      summary: Recommended books for current user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 8 }
+      responses:
+        '200':
+          description: Recommended books
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Book'
+
+  /books/{bookId}:
+    get:
+      tags: [Books]
+      summary: Get book detail with related products
+      parameters:
+        - $ref: '#/components/parameters/bookId'
+      responses:
+        '200':
+          description: Book detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── CART ──────────────────────────────────────────────────────────────────
+  /cart:
+    get:
+      tags: [Cart]
+      summary: Get current user's cart
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+    post:
+      tags: [Cart]
+      summary: Add item to cart
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CartItemRequest'
+      responses:
+        '200':
+          description: Updated cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+    delete:
+      tags: [Cart]
+      summary: Clear entire cart
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Cart cleared
+
+  /cart/{bookId}:
+    patch:
+      tags: [Cart]
+      summary: Update item quantity
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/bookId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [quantity]
+              properties:
+                quantity: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: Updated cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+    delete:
+      tags: [Cart]
+      summary: Remove item from cart
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/bookId'
+      responses:
+        '200':
+          description: Updated cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+
+  # ── ORDERS ────────────────────────────────────────────────────────────────
+  /orders:
+    get:
+      tags: [Orders]
+      summary: Order history for current user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+    post:
+      tags: [Orders]
+      summary: Place an order (checkout)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlaceOrderRequest'
+      responses:
+        '201':
+          description: Order placed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /orders/{orderId}:
+    get:
+      tags: [Orders]
+      summary: Get order detail
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/orderId'
+      responses:
+        '200':
+          description: Order detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /orders/{orderId}/cancel:
+    post:
+      tags: [Orders]
+      summary: Cancel order (within 48 hours)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/orderId'
+      responses:
+        '200':
+          description: Order cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  # ── PAYMENTS ──────────────────────────────────────────────────────────────
+  /payments:
+    post:
+      tags: [Payments]
+      summary: Process payment for an order
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+      responses:
+        '201':
+          description: Payment processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+
+  /payments/{paymentId}:
+    get:
+      tags: [Payments]
+      summary: Get payment status
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/paymentId'
+      responses:
+        '200':
+          description: Payment detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+
+# ── COMPONENTS ────────────────────────────────────────────────────────────────
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    bookId:
+      name: bookId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    orderId:
+      name: orderId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    addressId:
+      name: addressId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    paymentId:
+      name: paymentId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+
+  responses:
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    Conflict:
+      description: Conflict / already exists
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    UnprocessableEntity:
+      description: Validation error
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    PaymentRequired:
+      description: Payment failed
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+
+  schemas:
+    ApiError:
+      type: object
+      properties:
+        code: { type: string }
+        message: { type: string }
+
+    RegisterRequest:
+      type: object
+      required: [email, password, firstName, lastName]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8 }
+        firstName: { type: string }
+        lastName: { type: string }
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+
+    AuthResponse:
+      type: object
+      properties:
+        token: { type: string }
+        user: { $ref: '#/components/schemas/User' }
+
+    User:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string }
+        firstName: { type: string }
+        lastName: { type: string }
+        giftPoints: { type: integer }
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        firstName: { type: string }
+        lastName: { type: string }
+
+    Address:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        label: { type: string }
+        line1: { type: string }
+        line2: { type: string }
+        city: { type: string }
+        state: { type: string }
+        postalCode: { type: string }
+        country: { type: string }
+        isDefault: { type: boolean }
+
+    AddressRequest:
+      type: object
+      required: [label, line1, city, state, postalCode, country]
+      properties:
+        label: { type: string }
+        line1: { type: string }
+        line2: { type: string }
+        city: { type: string }
+        state: { type: string }
+        postalCode: { type: string }
+        country: { type: string }
+        isDefault: { type: boolean }
+
+    Category:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        slug: { type: string }
+        description: { type: string }
+
+    Brand:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        slug: { type: string }
+
+    Book:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        author: { type: string }
+        isbn: { type: string }
+        price: { type: number, format: double }
+        stock: { type: integer }
+        coverImageUrl: { type: string }
+        tentativeDeliveryDays: { type: integer }
+        category: { $ref: '#/components/schemas/Category' }
+        brand: { $ref: '#/components/schemas/Brand' }
+
+    BookDetail:
+      allOf:
+        - $ref: '#/components/schemas/Book'
+        - type: object
+          properties:
+            description: { type: string }
+            relatedProducts:
+              type: array
+              items:
+                $ref: '#/components/schemas/Book'
+
+    BookPage:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/Book' }
+        total: { type: integer }
+        page: { type: integer }
+        limit: { type: integer }
+
+    CartItem:
+      type: object
+      properties:
+        book: { $ref: '#/components/schemas/Book' }
+        quantity: { type: integer }
+        subtotal: { type: number }
+
+    Cart:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/CartItem' }
+        totalItems: { type: integer }
+        totalAmount: { type: number }
+
+    CartItemRequest:
+      type: object
+      required: [bookId, quantity]
+      properties:
+        bookId: { type: string, format: uuid }
+        quantity: { type: integer, minimum: 1 }
+
+    PlaceOrderRequest:
+      type: object
+      required: [addressId]
+      properties:
+        addressId: { type: string, format: uuid }
+        giftPointsToRedeem: { type: integer, default: 0 }
+
+    OrderItem:
+      type: object
+      properties:
+        book: { $ref: '#/components/schemas/Book' }
+        quantity: { type: integer }
+        unitPrice: { type: number }
+
+    Order:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        status:
+          type: string
+          enum: [pending, confirmed, shipped, delivered, cancelled]
+        totalAmount: { type: number }
+        giftPointsUsed: { type: integer }
+        placedAt: { type: string, format: date-time }
+        cancelDeadline: { type: string, format: date-time }
+
+    OrderDetail:
+      allOf:
+        - $ref: '#/components/schemas/Order'
+        - type: object
+          properties:
+            items:
+              type: array
+              items: { $ref: '#/components/schemas/OrderItem' }
+            address: { $ref: '#/components/schemas/Address' }
+            payment: { $ref: '#/components/schemas/Payment' }
+
+    PaymentRequest:
+      type: object
+      required: [orderId, method]
+      properties:
+        orderId: { type: string, format: uuid }
+        method:
+          type: string
+          enum: [card, paypal, gift_points]
+        cardToken:
+          type: string
+          description: Tokenised card reference (card method only)
+
+    Payment:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        orderId: { type: string, format: uuid }
+        method: { type: string }
+        status:
+          type: string
+          enum: [pending, completed, failed, refunded]
+        confirmationRef: { type: string }
+        amount: { type: number }
+        paidAt: { type: string, format: date-time }

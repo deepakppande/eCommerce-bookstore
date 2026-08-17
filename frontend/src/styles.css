@@ -1,0 +1,110 @@
+/* Angular Material prebuilt theme is loaded via angular.json */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+html, body { height: 100%; margin: 0; }
+body { font-family: Roboto, "Helvetica Neue", sans-serif; background: #f5f5f5; }
+
+/* ── Layout helpers ────────────────────────────────────────────────────────── */
+.page-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+/* ── Card elevation helpers ─────────────────────────────────────────────────*/
+.mat-card-book {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease;
+}
+.mat-card-book:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important; }
+
+/* ── Status chips ────────────────────────────────────────────────────────── */
+.chip-confirmed  { background-color: #e3f2fd !important; color: #1565c0 !important; }
+.chip-pending    { background-color: #fff8e1 !important; color: #f57f17 !important; }
+.chip-shipped    { background-color: #e8f5e9 !important; color: #2e7d32 !important; }
+.chip-delivered  { background-color: #e8f5e9 !important; color: #2e7d32 !important; }
+.chip-cancelled  { background-color: #fce4ec !important; color: #b71c1c !important; }
+
+/* ── Responsive grid for book cards ────────────────────────────────────────*/
+.books-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, 1fr);
+}
+@media (min-width: 600px)  { .books-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 960px)  { .books-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 1280px) { .books-grid { grid-template-columns: repeat(5, 1fr); } }
+
+.books-grid-4 {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, 1fr);
+}
+@media (min-width: 600px)  { .books-grid-4 { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 960px)  { .books-grid-4 { grid-template-columns: repeat(4, 1fr); } }
+
+/* ── Category grid ──────────────────────────────────────────────────────── */
+.category-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, 1fr);
+}
+@media (min-width: 600px)  { .category-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 960px)  { .category-grid { grid-template-columns: repeat(8, 1fr); } }
+
+/* ── Book cover placeholder ─────────────────────────────────────────────── */
+.cover-placeholder {
+  width: 100%;
+  aspect-ratio: 3/4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e8eaf6;
+  color: #9fa8da;
+}
+
+/* ── Checkout stepper ───────────────────────────────────────────────────── */
+.checkout-container {
+  max-width: 700px;
+  margin: 24px auto;
+  padding: 0 16px;
+}
+
+/* ── Form field full width ──────────────────────────────────────────────── */
+.full-width {
+  width: 100%;
+  display: block;
+}
+
+/* ── Fix Tailwind preflight breaking Angular Material form-field spacing ── */
+.mat-mdc-form-field {
+  display: block !important;
+  width: 100%;
+}
+
+/* ── Fix Tailwind preflight causing outline line to cut through the label ── */
+/* Tailwind base resets border styles which breaks MDC notched outline        */
+.mdc-notched-outline__notch {
+  border-right: none !important;
+  border-left: none !important;
+}
+
+/* ── Price display ──────────────────────────────────────────────────────── */
+.price-inr { font-weight: 600; }
+
+/* ── Snackbar success ───────────────────────────────────────────────────── */
+.snack-success .mdc-snackbar__surface { background-color: #388e3c !important; }
+.snack-error   .mdc-snackbar__surface { background-color: #c62828 !important; }
+
+/* ── Alert colours ──────────────────────────────────────────────────────── */
+.alert-error   { background:#fce4ec; color:#b71c1c; border:1px solid #ef9a9a; }
+.alert-success { background:#e8f5e9; color:#1b5e20; border:1px solid #a5d6a7; }
+.alert-info    { background:#e3f2fd; color:#0d47a1; border:1px solid #90caf9; }
+.alert-warning { background:#fff8e1; color:#e65100; border:1px solid #ffcc02; }
